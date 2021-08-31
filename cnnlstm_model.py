@@ -10,17 +10,15 @@ import io
 
 from torchmetrics import Accuracy, AUROC, ConfusionMatrix
 from lightning_model import Lightning_Super_Model
+from mlstmfcn import MLSTMfcn
 from PIL import Image
 
 
-class LSTM_Model(Lightning_Super_Model):
+class LSTM_CNN_Model(Lightning_Super_Model):
     def __init__(self):
         super().__init__()
-        self.lstm = torch.nn.LSTM(input_size=7, hidden_size=hidden_size, num_layers=3, batch_first=True, dropout=0.2)
-        self.lin = torch.nn.Linear(hidden_size, 2)
+        self.lstm = MLSTMfcn(num_classes=2, max_seq_len=None, num_features=7)
 
     def forward(self, x):
-        x, (_, _) = self.lstm(x)
-        x = x[:, -1, :]
-        x = self.lin(x)
-        return torch.softmax(x, dim=1)
+        x = self.lstm(x, torch.ones(x.shape[0]) * x.shape[1])
+        return x

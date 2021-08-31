@@ -7,8 +7,9 @@ from torch.utils.data import DataLoader, IterableDataset, Dataset
 from sklearn.svm import SVC
 import pytorch_lightning as pl
 import os
+import sys
 from tqdm import tqdm
-
+from cnnlstm_model import LSTM_CNN_Model
 from crawl_on_pickle import crawl_on_pickle
 from lstm_model import LSTM_Model
 
@@ -81,6 +82,12 @@ class PadSequence:
 
 
 if __name__ == '__main__':
+    model_name = sys.argv[1]
+    try:
+        gpu_number = int(sys.argv[2])
+    except:
+        gpu_number = 0
+
     train_dataset = TextDataset("ekman/training_ekman")
     validation_dataset = TextDataset("ekman/validation_ekman")
     test_dataset = TextDataset("ekman/test_ekman")
@@ -93,11 +100,16 @@ if __name__ == '__main__':
     mc = pl.callbacks.ModelCheckpoint(monitor="validation_loss")
     logger = pl.loggers.TensorBoardLogger(save_dir="lightning_logs")
     if torch.cuda.is_available():
-        trainer = pl.Trainer(gpus=[0], precision=16, callbacks=[es, mc], logger=logger)
+        trainer = pl.Trainer(gpus=[gpu_number], precision=16, callbacks=[es, mc], logger=logger)
     else:
         trainer = pl.Trainer(logger=logger)
 
-    model = LSTM_Model()
+    if model_name.lower() == "lstm":
+        model = LSTM_Model()
+    elif model_name.lower() == "cnnlstm":
+        model = LSTM_CNN_Model()
+    else:
+        raise AttributeError("model name must be specified. 'lstm' / 'cnnlstm'")
     trainer.fit(model, train_dataloader, validation_daloader)
 
     model = model.load_from_checkpoint(mc.best_model_path)
