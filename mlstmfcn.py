@@ -56,8 +56,8 @@ class MLSTMfcn(nn.Module):
         self.bn2 = nn.BatchNorm1d(self.conv2_nf)
         self.bn3 = nn.BatchNorm1d(self.conv3_nf)
 
-        self.se1 = SELayer(self.conv1_nf)  # ex 128
-        self.se2 = SELayer(self.conv2_nf)  # ex 256
+        self.se1 = SELayer(self.conv1_nf)  # ek 128
+        self.se2 = SELayer(self.conv2_nf)  # ek 256
 
         self.relu = nn.ReLU()
         self.lstmDrop = nn.Dropout(self.lstm_drop_p)

@@ -95,9 +95,20 @@ if __name__ == '__main__':
     except:
         gpu_number = 0
 
-    train_dataset = TextDataset("ekman/training_ekman")
-    validation_dataset = TextDataset("ekman/validation_ekman")
-    test_dataset = TextDataset("ekman/test_ekman")
+    to_image = False
+    if model_name.lower() == "lstm":
+        model = LSTM_Model()
+    elif model_name.lower() == "cnnlstm":
+        model = LSTM_CNN_Model()
+    elif model_name.lower() == "cnn":
+        to_image = True
+        model = CNN_Model()
+    else:
+        raise AttributeError("model name must be specified. 'lstm' / 'cnnlstm'")
+
+    train_dataset = TextDataset("ekman/training_ekman", to_image)
+    validation_dataset = TextDataset("ekman/validation_ekman", to_image)
+    test_dataset = TextDataset("ekman/test_ekman", to_image)
 
     train_dataloader = DataLoader(train_dataset, collate_fn=PadSequence(), batch_size=64, num_workers=24, shuffle=True)
     validation_daloader = DataLoader(validation_dataset, collate_fn=PadSequence(), batch_size=64, num_workers=24)
@@ -111,14 +122,6 @@ if __name__ == '__main__':
     else:
         trainer = pl.Trainer(logger=logger)
 
-    if model_name.lower() == "lstm":
-        model = LSTM_Model()
-    elif model_name.lower() == "cnnlstm":
-        model = LSTM_CNN_Model()
-    elif model_name.lower() == "cnn":
-        model = CNN_Model()
-    else:
-        raise AttributeError("model name must be specified. 'lstm' / 'cnnlstm'")
     trainer.fit(model, train_dataloader, validation_daloader)
 
     model = model.load_from_checkpoint(mc.best_model_path)
