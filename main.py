@@ -9,14 +9,17 @@ import pytorch_lightning as pl
 import os
 import sys
 from tqdm import tqdm
+
+from cnn_model import CNN_Model
 from cnnlstm_model import LSTM_CNN_Model
 from crawl_on_pickle import crawl_on_pickle
 from lstm_model import LSTM_Model
 
 
 class TextDataset(Dataset):
-    def __init__(self, path: str):
+    def __init__(self, path: str, to_image: bool = False):
         self.pfin = path
+        self.to_image = to_image
         self.reinit = False
 
         path = path.split("/")
@@ -60,6 +63,10 @@ class TextDataset(Dataset):
             label_t = torch.zeros(1)
         else:
             label_t = torch.ones(1)
+
+        if self.to_image:
+            pass
+
         return [posts_t, label_t]
 
 
@@ -108,6 +115,8 @@ if __name__ == '__main__':
         model = LSTM_Model()
     elif model_name.lower() == "cnnlstm":
         model = LSTM_CNN_Model()
+    elif model_name.lower() == "cnn":
+        model = CNN_Model()
     else:
         raise AttributeError("model name must be specified. 'lstm' / 'cnnlstm'")
     trainer.fit(model, train_dataloader, validation_daloader)

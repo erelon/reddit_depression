@@ -17,8 +17,10 @@ from PIL import Image
 class CNN_Model(Lightning_Super_Model):
     def __init__(self):
         super().__init__()
-        # self.cnn =
+        self.cnn = torch.nn.Conv2d(1, 3, (1, 1))
+        self.vgg = vgg11_bn(pretrained=True)
 
     def forward(self, x):
         x = self.cnn(x)
+        x = self.vgg(x)
         return x
