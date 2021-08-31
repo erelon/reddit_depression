@@ -8,22 +8,32 @@ import torchvision
 import torch
 import io
 
-from torchmetrics import Accuracy, AUROC, ConfusionMatrix
+from torchmetrics import Accuracy, AUROC, ConfusionMatrix, F1, Recall, Precision
 from PIL import Image
 
 
 class Lightning_Super_Model(pl.LightningModule):
     def __init__(self):
         super().__init__()
-        self.train_acc = Accuracy(num_classes=2)
-        self.valid_acc = Accuracy(num_classes=2)
-        self.test_acc = Accuracy(num_classes=2)
         self.CM_train = ConfusionMatrix(num_classes=2)
         self.CM_validation = ConfusionMatrix(num_classes=2)
         self.CM_test = ConfusionMatrix(num_classes=2)
         self.train_roc = AUROC(num_classes=2, compute_on_step=False)
         self.valid_roc = AUROC(num_classes=2, compute_on_step=False)
         self.test_roc = AUROC(num_classes=2, compute_on_step=False)
+
+        self.train_evaluators = [Accuracy(num_classes=2, compute_on_step=False),
+                                 F1(num_classes=2, compute_on_step=False),
+                                 Precision(num_classes=2, compute_on_step=False),
+                                 Recall(num_classes=2, compute_on_step=False)]
+        self.validation_evaluators = [Accuracy(num_classes=2, compute_on_step=False),
+                                      F1(num_classes=2, compute_on_step=False),
+                                      Precision(num_classes=2, compute_on_step=False),
+                                      Recall(num_classes=2, compute_on_step=False)]
+        self.test_evaluators = [Accuracy(num_classes=2, compute_on_step=False),
+                                F1(num_classes=2, compute_on_step=False),
+                                Precision(num_classes=2, compute_on_step=False),
+                                Recall(num_classes=2, compute_on_step=False)]
 
     def configure_optimizers(self):
         opt = torch.optim.Adam(self.parameters(), lr=5e-4)
@@ -35,17 +45,23 @@ class Lightning_Super_Model(pl.LightningModule):
     def loss(self, y, y_hat):
         return F.nll_loss(torch.log(y_hat), y.squeeze(), weight=torch.tensor([1., 10.], device=self.device))
 
+    def log_evaluators(self, step_kind, evals, y_hat, y):
+        for e in evals:
+            e(y_hat, y)
+            self.log(f"{step_kind}_{type(e)}", e)
+
     def training_step(self, batch, batch_id):
         x, lens, y = batch
         y = y.long()
         y_hat = self(x)
         loss = self.loss(y, y_hat)
-        self.log("train_loss", loss)
-        self.train_acc(torch.argmax(y_hat, dim=1).flatten(), y.squeeze())
-        self.CM_train(torch.argmax(y_hat, dim=1).flatten(), y.squeeze())
         self.train_roc(y_hat.squeeze(), y.squeeze())
-        self.log("train_acc", self.train_acc, on_step=True, on_epoch=True)
+        self.CM_train(torch.argmax(y_hat, dim=1).flatten(), y.squeeze())
+
+        self.log("train_loss", loss)
         self.log("train_roc", self.train_roc, on_step=True, on_epoch=True)
+
+        self.log_evaluators("train", self.train_evaluators, torch.argmax(y_hat, dim=1).flatten(), y.squeeze())
 
         return loss
 
@@ -54,12 +70,13 @@ class Lightning_Super_Model(pl.LightningModule):
         y = y.long()
         y_hat = self(x)
         loss = self.loss(y, y_hat)
-        self.log("validation_loss", loss)
-        self.valid_acc(torch.argmax(y_hat, dim=1).flatten(), y.squeeze())
         self.CM_validation(torch.argmax(y_hat, dim=1).flatten(), y.squeeze())
         self.valid_roc(y_hat.squeeze(), y.squeeze())
-        self.log("validation_acc", self.valid_acc, on_step=True, on_epoch=True)
+
+        self.log("validation_loss", loss)
         self.log("validation_roc", self.valid_roc, on_step=True, on_epoch=True)
+
+        self.log_evaluators("validation", self.validation_evaluators, torch.argmax(y_hat, dim=1).flatten(), y.squeeze())
 
         return loss
 
@@ -84,8 +101,6 @@ class Lightning_Super_Model(pl.LightningModule):
         # confusion matrix
         conf_mat = self.CM_validation.compute().detach().cpu().numpy().astype(np.int)
         self.CM_validation.reset()
-        # self.valid_roc.reset()
-        # self.valid_acc.reset()
         im = self.log_CM_helper(conf_mat)
         tb.add_image("val_confusion_matrix", im, global_step=self.current_epoch)
 
@@ -94,8 +109,6 @@ class Lightning_Super_Model(pl.LightningModule):
         # confusion matrix
         conf_mat = self.CM_train.compute().detach().cpu().numpy().astype(np.int)
         self.CM_train.reset()
-        # self.train_roc.reset()
-        # self.train_acc.reset()
         im = self.log_CM_helper(conf_mat)
         tb.add_image("train_confusion_matrix", im, global_step=self.current_epoch)
 
@@ -111,11 +124,12 @@ class Lightning_Super_Model(pl.LightningModule):
         y = y.long()
         y_hat = self(x)
         loss = self.loss(y, y_hat)
-        self.log("test_loss", loss)
-        self.test_acc(torch.argmax(y_hat, dim=1).flatten(), y.squeeze())
         self.CM_test(torch.argmax(y_hat, dim=1).flatten(), y.squeeze())
         self.test_roc(y_hat.squeeze(), y.squeeze())
-        self.log("test_acc", self.test_acc, on_step=True, on_epoch=True)
+
+        self.log("test_loss", loss)
         self.log("test_roc", self.test_roc, on_step=True, on_epoch=True)
+
+        self.log_evaluators("test", self.test_evaluators, torch.argmax(y_hat, dim=1).flatten(), y.squeeze())
 
         return loss
