@@ -1,14 +1,4 @@
-from pickle import _Unpickler
-import json
 from struct import unpack
-
-import torch
-from torch.utils.data import DataLoader, IterableDataset
-from sklearn.svm import SVC
-import pytorch_lightning as pl
-from tqdm import tqdm
-
-from lstm_model import LSTM_Model
 
 
 def _crawl_on_pickle(fd):
@@ -49,4 +39,3 @@ def crawl_on_pickle(fd):
 #         for i in tqdm(places):
 #             f.seek(i)
 #             un.load()
-

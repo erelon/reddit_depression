@@ -1,19 +1,15 @@
-import pickle
-from pickle import _Unpickler
-import json
-from struct import unpack
-import torch
-from torch.utils.data import DataLoader, IterableDataset, Dataset
-from sklearn.svm import SVC
 import pytorch_lightning as pl
-import os
+import pickle
+import torch
 import sys
-from tqdm import tqdm
+import os
 
-from cnn_model import CNN_Model
-from cnnlstm_model import LSTM_CNN_Model
+from torch.utils.data import DataLoader, Dataset
 from crawl_on_pickle import crawl_on_pickle
-from lstm_model import LSTM_Model
+from models.cnnlstm_model import LSTM_CNN_Model
+from models.lstm_model import LSTM_Model
+from models.cnn_model import CNN_Model
+from pickle import _Unpickler
 
 
 class TextDataset(Dataset):
