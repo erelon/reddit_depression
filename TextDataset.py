@@ -1,5 +1,6 @@
 import pickle
 import torch
+import cv2
 import os
 
 from crawl_on_pickle import crawl_on_pickle
@@ -56,8 +57,8 @@ class TextDataset(Dataset):
             label_t = torch.ones(1)
 
         if self.to_image:
-            pass
-
+            # Adding 1 dim for channel
+            posts_t = torch.tensor(cv2.resize(posts_t.numpy(), (224, 224))).unsqueeze(0)
         return [posts_t, label_t]
 
 

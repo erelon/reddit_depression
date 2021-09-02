@@ -9,8 +9,17 @@ class CNN_Model(Lightning_Super_Model):
         super().__init__()
         self.cnn = torch.nn.Conv2d(1, 3, (1, 1))
         self.vgg = vgg11_bn(pretrained=True)
+        self.vgg.classifier = torch.nn.Sequential(
+            torch.nn.Linear(512 * 7 * 7, 4096),
+            torch.nn.ReLU(True),
+            torch.nn.Dropout(),
+            torch.nn.Linear(4096, 4096),
+            torch.nn.ReLU(True),
+            torch.nn.Dropout(),
+            torch.nn.Linear(4096, 2),
+        )
 
     def forward(self, x):
         x = self.cnn(x)
         x = self.vgg(x)
-        return x
+        return torch.softmax(x, dim=1)

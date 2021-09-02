@@ -18,7 +18,11 @@ if __name__ == '__main__':
 
     to_image = False
     if model_name.lower() == "lstm":
-        model = LSTM_Model()
+        try:
+            hidden_size = int(sys.argv[3])
+        except:
+            hidden_size = 128
+        model = LSTM_Model(hidden_size)
     elif model_name.lower() == "cnnlstm":
         model = LSTM_CNN_Model()
     elif model_name.lower() == "cnn":
