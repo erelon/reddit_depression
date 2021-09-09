@@ -47,11 +47,18 @@ def plot_pca(dataloader, dims=2):
 
 
 def plot_correlation(dataloader):
-    spearman_corr = SpearmanCorrcoef(compute_on_step=False)
+    all_cors = dict()
     for i, B in enumerate(tqdm(dataloader)):
         x, len, y = B
-        spearman_corr.update(x, y)
+        if len(all_cors) == 0:
+            for j in range(x.shape[1]):
+                all_cors[j] = SpearmanCorrcoef(compute_on_step=False)
+        for j in range(x.shape[1]):
+            all_cors[j].update(x[:, j], y)
         if i == 2:
             break
-    corr = spearman_corr.compute()
-    print(corr)
+
+    final_corrs = dict()
+    for j in range(x.shape[1]):
+        final_corrs[j] = all_cors[j].compute()
+    print(final_corrs)
