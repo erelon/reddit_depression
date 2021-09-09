@@ -1,3 +1,13 @@
+import matplotlib.pyplot  as plt
+import numpy as np
+import torch
+import os
+
+from sklearn.decomposition import IncrementalPCA
+from pickle import dump, load
+from tqdm import tqdm
+
+
 def plot_pca(dataloader, dims=2):
     if dims != 2 and dims != 3:
         raise AttributeError("only 2 or 3 dims are supported")

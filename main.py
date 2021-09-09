@@ -1,21 +1,13 @@
-from pickle import dump, load
-
 import pytorch_lightning as pl
 import torch
 import sys
 
 from pytorch_lightning.loggers import TensorBoardLogger
-from sklearn.decomposition import IncrementalPCA
-from tqdm import tqdm
-
 from TextDataset import TextDataset, PadSequence
 from models.cnnlstm_model import LSTM_CNN_Model
 from models.lstm_model import LSTM_Model
 from torch.utils.data import DataLoader
 from models.cnn_model import CNN_Model
-import matplotlib.pyplot  as plt
-import os
-import numpy as np
 
 if __name__ == '__main__':
     model_name = sys.argv[1]
