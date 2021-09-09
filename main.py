@@ -1,13 +1,21 @@
+from pickle import dump, load
+
 import pytorch_lightning as pl
 import torch
 import sys
 
 from pytorch_lightning.loggers import TensorBoardLogger
+from sklearn.decomposition import IncrementalPCA
+from tqdm import tqdm
+
 from TextDataset import TextDataset, PadSequence
 from models.cnnlstm_model import LSTM_CNN_Model
 from models.lstm_model import LSTM_Model
 from torch.utils.data import DataLoader
 from models.cnn_model import CNN_Model
+import matplotlib.pyplot  as plt
+import os
+import numpy as np
 
 if __name__ == '__main__':
     model_name = sys.argv[1]
@@ -35,9 +43,13 @@ if __name__ == '__main__':
     validation_dataset = TextDataset("ekman/validation_ekman", to_image)
     test_dataset = TextDataset("ekman/test_ekman", to_image)
 
-    train_dataloader = DataLoader(train_dataset, collate_fn=PadSequence(), batch_size=64, num_workers=24, shuffle=True)
+    train_dataloader = DataLoader(train_dataset, collate_fn=PadSequence(), batch_size=64, num_workers=24,
+                                  shuffle=True)
     validation_daloader = DataLoader(validation_dataset, collate_fn=PadSequence(), batch_size=64, num_workers=24)
     test_daloader = DataLoader(test_dataset, collate_fn=PadSequence(), batch_size=64, num_workers=24)
+
+    plot_pca(train_dataloader, 3)
+    exit(0)
 
     es = pl.callbacks.EarlyStopping("validation_loss", patience=5)
     mc = pl.callbacks.ModelCheckpoint(monitor="validation_loss")
