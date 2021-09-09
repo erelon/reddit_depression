@@ -8,6 +8,7 @@ from models.cnnlstm_model import LSTM_CNN_Model
 from models.lstm_model import LSTM_Model
 from torch.utils.data import DataLoader
 from models.cnn_model import CNN_Model
+from plotting_tools import plot_pca
 
 if __name__ == '__main__':
     model_name = sys.argv[1]

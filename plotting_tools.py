@@ -4,6 +4,7 @@ import torch
 import os
 
 from sklearn.decomposition import IncrementalPCA
+from torchmetrics import SpearmanCorrcoef
 from pickle import dump, load
 from tqdm import tqdm
 
@@ -43,3 +44,14 @@ def plot_pca(dataloader, dims=2):
     plt.legend()
     plt.savefig(f"pca_{dims}.png")
     plt.show()
+
+
+def plot_correlation(dataloader):
+    spearman_corr = SpearmanCorrcoef(compute_on_step=False)
+    for i, B in enumerate(tqdm(dataloader)):
+        x, len, y = B
+        spearman_corr.update(x, y)
+        if i == 2:
+            break
+    corr = spearman_corr.compute()
+    print(corr)
